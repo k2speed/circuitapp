@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import 'package:circuit_slide/constants/constants.dart' as constants;
 import 'package:circuit_slide/events.dart';
@@ -13,6 +14,8 @@ class StartButton extends StatefulWidget {
 }
 
 class _StartButtonState extends State<StartButton> {
+  StreamSubscription? subscriptionGameStartEvent;
+
   @override
   void initState() {
     registerEvents();
@@ -20,13 +23,15 @@ class _StartButtonState extends State<StartButton> {
   }
 
   registerEvents() {
-    eventBus.on<GameStartEvent>().listen((event) {
+    subscriptionGameStartEvent = eventBus.on<GameStartEvent>().listen((event) {
       setState(() {});
     });
   }
 
   @override
   void dispose() async {
+    subscriptionGameStartEvent!.cancel();
+    subscriptionGameStartEvent = null;
     super.dispose();
   }
 

@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable, camel_case_types, file_names, prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -30,14 +31,24 @@ class cTile extends StatefulWidget {
 }
 
 class _cTileState extends State<cTile> {
+  StreamSubscription? subscriptionGameCompletedEvent, subscriptionMakeMoveEvent;
   @override
   void initState() {
     registerEvents();
     super.initState();
   }
 
+  @override
+  void dispose() async {
+    subscriptionMakeMoveEvent!.cancel();
+    subscriptionMakeMoveEvent = null;
+    subscriptionGameCompletedEvent!.cancel();
+    subscriptionGameCompletedEvent = null;
+    super.dispose();
+  }
+
   registerEvents() {
-    eventBus.on<MakeMoveEvent>().listen((event) {
+    subscriptionMakeMoveEvent = eventBus.on<MakeMoveEvent>().listen((event) {
       // print("Received MakeMoveEvent" + event.targetTileId.toString());
 
       /* Check if this move event is applicable to the current Instance of PuzzleTile */
@@ -46,7 +57,8 @@ class _cTileState extends State<cTile> {
       }
     });
 
-    eventBus.on<GameCompletedEvent>().listen((event) {
+    subscriptionGameCompletedEvent =
+        eventBus.on<GameCompletedEvent>().listen((event) {
       setState(() {});
     });
   }
@@ -91,13 +103,13 @@ class _cTileState extends State<cTile> {
           // color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
           color: constants.kSurfaceColor,
           //width: cTile.width,
-          width: MediaQuery.of(context).size.width > 1200
-              ? cTile.width
-              : cTile.width * 1,
+          width: MediaQuery.of(context).size.width < 1024
+              ? constants.kSmallTileWidth
+              : constants.kTileWidth,
           //height: cTile.height,
-          height: MediaQuery.of(context).size.width > 1200
-              ? cTile.height
-              : cTile.height * 1,
+          height: MediaQuery.of(context).size.width < 1024
+              ? constants.kSmallTileHeight
+              : constants.kTileHeight,
           child: Center(
               child: Stack(
             children: [

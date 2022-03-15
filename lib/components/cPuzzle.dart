@@ -3,12 +3,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:circuit_slide/constants/constants.dart' as constants;
-import 'package:circuit_slide/models/puzzleProcessor.dart';
 import 'package:circuit_slide/components/cTilesHolder.dart';
 
 class cPuzzle extends StatelessWidget {
-  late PuzzleProcessor _puzzleProcessor;
-
   // Gets the current Matrix from the processor
   late List<List> tilesMatrix;
 

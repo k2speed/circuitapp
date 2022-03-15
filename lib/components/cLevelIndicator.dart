@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:circuit_slide/constants/constants.dart' as constants;
@@ -14,18 +15,31 @@ class cLevelIndicator extends StatefulWidget {
 }
 
 class _cLevelIndicatorState extends State<cLevelIndicator> {
+  StreamSubscription? subscriptionGameStartEvent,
+      subscriptionGameCompletedEvent;
+
   @override
   void initState() {
     registerEvents();
     super.initState();
   }
 
+  @override
+  void dispose() {
+    subscriptionGameStartEvent!.cancel();
+    subscriptionGameStartEvent = null;
+    subscriptionGameCompletedEvent!.cancel();
+    subscriptionGameCompletedEvent = null;
+    super.dispose();
+  }
+
   registerEvents() {
-    eventBus.on<GameStartEvent>().listen((event) {
+    subscriptionGameStartEvent = eventBus.on<GameStartEvent>().listen((event) {
       setState(() {});
     });
 
-    eventBus.on<GameCompletedEvent>().listen((event) {
+    subscriptionGameCompletedEvent =
+        eventBus.on<GameCompletedEvent>().listen((event) {
       setState(() {});
     });
   }

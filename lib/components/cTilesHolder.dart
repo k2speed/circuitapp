@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 
 import 'package:event_bus/event_bus.dart';
 
@@ -11,6 +12,7 @@ import 'package:circuit_slide/models/puzzleProcessor.dart';
 import 'package:circuit_slide/events.dart';
 import 'package:circuit_slide/models/tile_details.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 
 class cTilesHolder extends StatefulWidget {
   cTilesHolder({Key? key}) : super(key: key);
@@ -26,36 +28,51 @@ class _cTilesHolderState extends State<cTilesHolder> {
   late PuzzleProcessor _puzzleProcessor;
   late List tilesMatrix;
   int totalMoves = 0;
+  double lTileWidth = 120;
+  double lTileHeight = 120;
   int lastKeyPressTime = DateTime.now().millisecondsSinceEpoch;
+  StreamSubscription? subscriptionGameStartEvent, subscriptionTileTappedEvent;
 
   @override
   void initState() {
-    _puzzleProcessor = PuzzleProcessor();
-    tilesMatrix = _puzzleProcessor.getSolvedPuzzle()!;
+    // Register for various events that this component will be intreseted to handle.
     registerEvents();
+
+    // Build the initial state of the puzzle which is solved
+    _puzzleProcessor = PuzzleProcessor();
+    // tilesMatrix = _puzzleProcessor.getSolvedPuzzle()!;
+    // _buildPuzzleMatrix();
+
+    // This is workaround to handle the duplicate keyboard events.
+    // Events received within 200 mili will be considered as duplicate
     lastKeyPressTime = DateTime.now().millisecondsSinceEpoch;
-    _buildPuzzleMatrix();
+
     super.initState();
   }
 
   registerEvents() {
-    eventBus.on<TileTappedEvent>().listen((event) {
+    subscriptionTileTappedEvent =
+        eventBus.on<TileTappedEvent>().listen((event) {
       _handleTapEvent(event.tileId);
       //print("Received TileTappedEvent" + event.tileId.toString());
     });
 
-    eventBus.on<GameStartEvent>().listen((event) {
-      tiles.clear();
-      tilesMatrix = _puzzleProcessor.getShuffledPuzzle()!;
-      _buildPuzzleMatrix();
+    subscriptionGameStartEvent = eventBus.on<GameStartEvent>().listen((event) {
+      /** CHECKING */
+      // tiles.clear();
+      // tilesMatrix = _puzzleProcessor.getShuffledPuzzle()!;
+      // _buildPuzzleMatrix();
+
       setState(() {
         //Reset Score Summary
         totalMoves = 0;
-        eventBus.fire(
-            UpdateScoreEvent(_puzzleProcessor.getTilesCompleted(), totalMoves));
+        constants.kGameInitialState = false;
         constants.kGameInProgress = true;
         constants.kGameFinished = false;
         constants.kInnerTilePadding = 1;
+        eventBus.fire(
+            UpdateScoreEvent(_puzzleProcessor.getTilesCompleted(), totalMoves));
+
         _focusNode.previousFocus();
       });
     });
@@ -69,10 +86,10 @@ class _cTilesHolderState extends State<cTilesHolder> {
           colIndex++) {
         tiles.add(
           cTile(
-            xpos: (colIndex * constants.kTileWidth) +
+            xpos: (colIndex * lTileWidth) +
                 startX +
                 (constants.kTileSpacing * colIndex),
-            ypos: (rowIndex * constants.kTileHeight) +
+            ypos: (rowIndex * lTileHeight) +
                 startY +
                 (constants.kTileSpacing * rowIndex),
             tileText: tilesMatrix[rowIndex][colIndex].toString(),
@@ -86,7 +103,28 @@ class _cTilesHolderState extends State<cTilesHolder> {
   final FocusNode _focusNode = FocusNode();
   @override
   Widget build(BuildContext context) {
-    //print(tiles.length);
+    lTileWidth = MediaQuery.of(context).size.width < 1024
+        ? constants.kSmallTileWidth
+        : constants.kTileWidth;
+
+    lTileHeight = MediaQuery.of(context).size.width < 1024
+        ? constants.kSmallTileHeight
+        : constants.kTileHeight;
+
+    // Build the tiles list based on the current game state
+    if (constants.kGameInitialState) {
+      tiles.clear();
+      tilesMatrix = _puzzleProcessor.getSolvedPuzzle()!;
+      _buildPuzzleMatrix();
+    } else if (constants.kGameInProgress || constants.kGameFinished) {
+      tiles.clear();
+      tilesMatrix = _puzzleProcessor.getShuffledPuzzle()!;
+      _buildPuzzleMatrix();
+    } else if (constants.kGameFinished) {
+      tiles.clear();
+      tilesMatrix = _puzzleProcessor.getUpdatedPuzzle()!;
+      _buildPuzzleMatrix();
+    }
 
     return RawKeyboardListener(
       autofocus: true,
@@ -110,6 +148,10 @@ class _cTilesHolderState extends State<cTilesHolder> {
   // Focus nodes need to be disposed.
   @override
   void dispose() {
+    subscriptionGameStartEvent!.cancel();
+    subscriptionGameStartEvent = null;
+    subscriptionTileTappedEvent!.cancel();
+    subscriptionTileTappedEvent = null;
     _focusNode.dispose();
     super.dispose();
   }
@@ -216,10 +258,14 @@ class _cTilesHolderState extends State<cTilesHolder> {
       // final player = AudioPlayer();
       // player.setAsset('sounds/lightson.mp3');
       // player.play();
+      AssetsAudioPlayer.newPlayer().open(
+        Audio("assets/sounds/lightson.mp3"),
+      );
+
       // Update global Game progress variable to false
       constants.kGameInProgress = false;
       constants.kGameFinished = true;
-      constants.kInnerTilePadding = 3;
+      constants.kInnerTilePadding = 1;
 
       // Fire Game Completed Event
       eventBus.fire(GameCompletedEvent());
@@ -228,6 +274,9 @@ class _cTilesHolderState extends State<cTilesHolder> {
       // final player = AudioPlayer();
       // player.setAsset('sounds/tilemove1.mp3');
       // player.play();
+      AssetsAudioPlayer.newPlayer().open(
+        Audio("assets/sounds/tilemove1.mp3"),
+      );
     }
   }
 }

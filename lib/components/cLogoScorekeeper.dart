@@ -1,6 +1,7 @@
 // ignore_for_file: camel_case_types, must_be_immutable, file_names, prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -22,20 +23,30 @@ class cLogoScoreKeeper extends StatefulWidget {
 }
 
 class _cLogoScoreKeeperState extends State<cLogoScoreKeeper> {
+  StreamSubscription? subscriptionUpdateScoreEvent;
   @override
   void initState() {
     registerEvents();
     super.initState();
   }
 
+  @override
+  void dispose() async {
+    subscriptionUpdateScoreEvent!.cancel();
+    subscriptionUpdateScoreEvent = null;
+    super.dispose();
+  }
+
   registerEvents() {
-    eventBus.on<UpdateScoreEvent>().listen((event) {
+    subscriptionUpdateScoreEvent =
+        eventBus.on<UpdateScoreEvent>().listen((event) {
       widget.tilesCompleted = event.tilesCompleted;
       widget.moves = event.totalMoves;
       setState(() {});
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     bool isDesktop = MediaQuery.of(context).size.width < 1024 ? false : true;
     return Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import 'package:stop_watch_timer/stop_watch_timer.dart';
 
@@ -16,6 +17,8 @@ class GameTimer extends StatefulWidget {
 
 class _GameTimerState extends State<GameTimer> {
   final _isHours = true;
+  StreamSubscription? subscriptionGameStartEvent,
+      subscriptionGameCompletedEvent;
 
   final StopWatchTimer _stopWatchTimer = StopWatchTimer(
     mode: StopWatchMode.countUp,
@@ -37,18 +40,23 @@ class _GameTimerState extends State<GameTimer> {
   }
 
   registerEvents() {
-    eventBus.on<GameStartEvent>().listen((event) {
+    subscriptionGameStartEvent = eventBus.on<GameStartEvent>().listen((event) {
       _stopWatchTimer.onExecute.add(StopWatchExecute.reset);
       _stopWatchTimer.onExecute.add(StopWatchExecute.start);
     });
 
-    eventBus.on<GameCompletedEvent>().listen((event) {
+    subscriptionGameCompletedEvent =
+        eventBus.on<GameCompletedEvent>().listen((event) {
       _stopWatchTimer.onExecute.add(StopWatchExecute.stop);
     });
   }
 
   @override
   void dispose() async {
+    subscriptionGameStartEvent!.cancel();
+    subscriptionGameStartEvent = null;
+    subscriptionGameCompletedEvent!.cancel();
+    subscriptionGameCompletedEvent = null;
     super.dispose();
     await _stopWatchTimer.dispose();
   }

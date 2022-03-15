@@ -2,15 +2,16 @@
 
 import 'package:flutter/material.dart';
 
+bool kGameInitialState = true;
 bool kGameFinished = false;
 bool kGameInProgress = false;
-int kPuzzleShuffleCount = 100;
+int kPuzzleShuffleCount = 50;
 
-double kTileSpacing = 0.3;
+double kTileSpacing = 0;
 double kTileWidth = 120;
 double kTileHeight = 120;
-const double kSmallTileWidth = 80;
-const double kSmallTileHeight = 80;
+const double kSmallTileWidth = 80.4;
+const double kSmallTileHeight = 80.4;
 
 double kInnerTilePadding = 0;
 const double kTileBadgeSize = 30;

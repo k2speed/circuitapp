@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:circuit_slide/constants/constants.dart' as constants;
-import 'package:circuit_slide/events.dart';
 import 'package:circuit_slide/components/app_bar.dart';
 import 'package:circuit_slide/layout/desktop_layout.dart';
 import 'package:circuit_slide/layout/mobile_layout.dart';
